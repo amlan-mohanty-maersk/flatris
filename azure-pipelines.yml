@@ -19,3 +19,8 @@ steps:
     npm install --legacy-peer-deps
     npm run build
   displayName: 'npm install and build'
+  
+- script: |
+    echo "API_KEY=$(API_KEY)" >> .env
+    echo "NODE_ENV=production" >> .env
+  displayName: 'Generate .env file'
