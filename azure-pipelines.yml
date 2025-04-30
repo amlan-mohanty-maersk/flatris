@@ -7,19 +7,30 @@ trigger:
 - master
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
+
+variables:
+  PORT: '3000'
+  DATABASE_URL: '$(DATABASE_URL)'  # Set securely in Azure DevOps pipeline variables or variable group
+  API_KEY: '$(API_KEY)'            # Secrets should be defined securely in Azure DevOps
 
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '20.x'
+    versionSpec: '18.x'
   displayName: 'Install Node.js'
 
 - script: |
-    npm install --legacy-peer-deps
-    npm run build
-  displayName: 'npm install and build'
-  
-- script: | 
-    echo "NODE_ENV=production" >> .env
+    echo "Creating .env file..."
+    echo "PORT=${PORT}" > .env
+    echo "DATABASE_URL=${DATABASE_URL}" >> .env
+    echo "API_KEY=${API_KEY}" >> .env
   displayName: 'Generate .env file'
+
+- script: |
+    npm install
+  displayName: 'Install dependencies'
+
+- script: |
+    npm run build
+  displayName: 'Build app'
