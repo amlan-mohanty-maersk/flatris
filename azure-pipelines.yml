@@ -1,18 +1,8 @@
-# Node.js with React
-# Build a Node.js project that uses React.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
 - master
 
 pool:
   vmImage: 'ubuntu-latest'
-
-variables:
-  PORT: '3000'
-  DATABASE_URL: '$(DATABASE_URL)'  # Set securely in Azure DevOps pipeline variables or variable group
-  API_KEY: '$(API_KEY)'            # Secrets should be defined securely in Azure DevOps
 
 steps:
 - task: NodeTool@0
@@ -21,17 +11,28 @@ steps:
   displayName: 'Install Node.js'
 
 - script: |
-    echo "Creating .env file..."
-    echo "PORT=${PORT}" > .env
-    echo "DATABASE_URL=${DATABASE_URL}" >> .env
-    echo "API_KEY=${API_KEY}" >> .env
-  displayName: 'Generate .env file'
-
-- script: |
-    npm install --legacy-peer-deps
-  displayName: 'Install dependencies'
-
-- script: |
-    export NODE_OPTIONS=--openssl-legacy-provider
+    npm install
     npm run build
   displayName: 'Build app'
+
+# Create artifact staging directory
+- script: |
+    mkdir -p $(Build.ArtifactStagingDirectory)/app
+    cp -r * $(Build.ArtifactStagingDirectory)/app
+  displayName: 'Copy files to staging'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/app'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/myapp.zip'
+    replaceExistingArchive: true
+  displayName: 'Archive app to zip'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/myapp.zip'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+  displayName: 'Publish build artifact'
