@@ -32,5 +32,6 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
+    export NODE_OPTIONS=--openssl-legacy-provider
     npm run build
   displayName: 'Build app'
